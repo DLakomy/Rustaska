@@ -1,0 +1,9 @@
+Record: 3
+P02: "another sample text"
+g4rb4ge
+^
+expectation:
+* must match string: "%
+"
+P01: -123
+%

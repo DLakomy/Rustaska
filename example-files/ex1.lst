@@ -1,0 +1,16 @@
+Something to filter out at the beginning
+Record: 1
+P02: "another sample text"
+P01: -321
+%
+Record: 2
+P01: 321
+P02: "sample text"
+P03:  "sth"
+%
+Record: 3
+P02: "another sample text"
+g4rb4ge
+P01: -123
+%
+Something to filter out at the end
