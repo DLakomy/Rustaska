@@ -4,8 +4,9 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
     character::complete::{char, digit1, line_ending, space0},
-    combinator::{map, map_res, opt, recognize},
-    sequence::{delimited, tuple},
+    combinator::{all_consuming, map, map_res, opt, recognize},
+    multi::many1,
+    sequence::{delimited, terminated, tuple},
     IResult, Parser,
 };
 
@@ -24,6 +25,7 @@ struct Field {
     value: FieldVal,
 }
 
+#[derive(PartialEq, Eq, Debug)]
 pub struct Record {
     id: Id,
     fields: Vec<Field>,
@@ -48,18 +50,7 @@ impl Error for ParseError {}
 
 // TODO maybe String will do? ie. str instead of ParseError
 pub fn parse_record(input: &str) -> Result<Record, ParseError> {
-    let fields = vec![
-        Field {
-            id: 12,
-            value: FieldVal::Num(66),
-        },
-        Field {
-            id: 13,
-            value: FieldVal::Str("12".to_owned()),
-        },
-    ];
-    let rec = Record { id: 12, fields };
-    Ok(rec)
+    todo!();
 }
 
 fn parse_rec_header(i: &str) -> IResult<&str, Id> {
@@ -86,9 +77,16 @@ fn parse_field(i: &str) -> IResult<&str, Field> {
         .parse(i)
 }
 
-fn parse_record_internal(i: &str) -> IResult<&str, Field> {
-    todo!() // maybe move internal to the main one, if it's only going to translate the error
+fn parse_record_internal(i: &str) -> IResult<&str, Record> {
+    let fields = many1(parse_field);
+    let mut rec = map(tuple((parse_rec_header, fields)), |(id, fields)| Record {
+        id,
+        fields,
+    });
+    all_consuming(terminated(rec, tag("%\n")))(i)
 }
+
+// TODO VerboseError, preceded(char('\"'), cut(terminated(parse_str, char('\"')))) - for string parsing in str field
 
 #[cfg(test)]
 mod tests {
@@ -148,5 +146,34 @@ mod tests {
     fn test_parse_unclosed_str_field() {
         let result = parse_field("P01: \"aqq\\n");
         assert!(result.is_err())
+    }
+
+    #[test]
+    fn test_parse_record() {
+        let input = "\
+Record: 12
+P01: 321
+P02: \"sample text\"
+P03:  \"sth\"
+%\n";
+
+        let fields = vec![
+            Field {
+                id: 1,
+                value: FieldVal::Num(321),
+            },
+            Field {
+                id: 2,
+                value: FieldVal::Str("sample text".to_owned()),
+            },
+            Field {
+                id: 3,
+                value: FieldVal::Str("sth".to_owned()),
+            },
+        ];
+        let expected = Record { id: 12, fields };
+
+        let result = parse_record_internal(input);
+        assert_eq!(result, Ok(("", expected)))
     }
 }
