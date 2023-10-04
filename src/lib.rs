@@ -7,6 +7,36 @@ use std::io::BufReader;
 
 use crate::source_reader::SourceReader;
 
+#[derive(Debug, PartialEq, Eq)]
+struct Config {
+    source_path: String,
+    numbers_path: String,
+    strings_path: String,
+    errors_path: String,
+}
+
+impl Config {
+    pub fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        args.next(); // ignore first
+        let source_path = args.next().ok_or("Didn't get a source path")?;
+        let numbers_path = args.next().ok_or("Didn't get a numbers destination path")?;
+        let strings_path = args.next().ok_or("Didn't get a strings destination path")?;
+        let errors_path = args.next().ok_or("Didn't get an error file path")?;
+
+        if args.next().is_some() {
+            Err("Too many arguments")
+        } else {
+            Ok(Config {
+                source_path,
+                numbers_path,
+                strings_path,
+                errors_path,
+            })
+        }
+    }
+}
+
+// TODO use Config as input param
 pub fn program() -> Result<(), Box<dyn Error>> {
     let f = File::open("example-files/ex1.lst")?;
     let br = BufReader::new(f);
@@ -15,4 +45,59 @@ pub fn program() -> Result<(), Box<dyn Error>> {
     let record = src_reader.read_record()?;
     print!("{}", record.unwrap());
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_config_parser() {
+        // happy path
+        let args = vec![
+            "0".to_string(),
+            "src".to_string(),
+            "num".to_string(),
+            "str".to_string(),
+            "err".to_string(),
+        ]
+        .into_iter();
+
+        let expected = Config {
+            source_path: "src".to_string(),
+            numbers_path: "num".to_string(),
+            strings_path: "str".to_string(),
+            errors_path: "err".to_string(),
+        };
+        let obtained = Config::build(args);
+
+        assert_eq!(Ok(expected), obtained);
+
+        // unhappy path 1 - too few args
+        let args = vec![
+            "0".to_string(),
+            "src".to_string(),
+            "num".to_string(),
+            "err".to_string(),
+        ]
+        .into_iter();
+
+        let obtained = Config::build(args);
+        assert!(obtained.is_err());
+
+        // unhappy path 2 - too many args
+        let args = vec![
+            "0".to_string(),
+            "src".to_string(),
+            "num".to_string(),
+            "str".to_string(),
+            "err".to_string(),
+            "sth".to_string(),
+        ]
+        .into_iter();
+
+        let obtained = Config::build(args);
+        assert!(obtained.is_err());
+    }
 }
