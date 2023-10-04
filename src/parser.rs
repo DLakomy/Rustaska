@@ -4,11 +4,15 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
     character::complete::{char, digit1, line_ending, space0},
-    combinator::{all_consuming, map, map_res, opt, recognize},
+    combinator::{all_consuming, cut, map, map_res, opt, recognize},
+    error::{context, convert_error, VerboseError},
     multi::many1,
-    sequence::{delimited, terminated, tuple},
-    IResult, Parser,
+    sequence::{delimited, preceded, terminated, tuple},
+    Finish, IResult, Parser,
 };
+
+// switching error type to VerboseError
+type Res<T, U> = IResult<T, U, VerboseError<T>>;
 
 // could be usize, no idea;
 // not important in this case, it's a toy project
@@ -43,30 +47,35 @@ impl Display for ParseError {
 }
 
 impl Error for ParseError {}
-// Record: 1
-// P02: "another sample text"
-// P01: -321
-// %
 
-// TODO maybe String will do? ie. str instead of ParseError
 pub fn parse_record(input: &str) -> Result<Record, ParseError> {
-    todo!();
+    match parse_record_internal(input).finish() {
+        Ok((_, rec)) => Ok(rec),
+        Err(e) => Err(ParseError {
+            msg: convert_error(input, e),
+        }),
+    }
 }
 
-fn parse_rec_header(i: &str) -> IResult<&str, Id> {
+fn parse_rec_header(i: &str) -> Res<&str, Id> {
     let str = delimited(tag("Record: "), digit1, line_ending);
-    map_res(str, str::parse)(i)
+    map_res(context("Record header", str), str::parse)(i)
 }
 
-fn parse_num(i: &str) -> IResult<&str, i32> {
+fn parse_num(i: &str) -> Res<&str, i32> {
     let r = recognize(opt(char('-')).and(digit1));
-    map_res(r, str::parse).parse(i)
+    map_res(context("number", r), str::parse).parse(i)
 }
-
-fn parse_field(i: &str) -> IResult<&str, Field> {
+fn parse_field(i: &str) -> Res<&str, Field> {
     let p_field_number = delimited(char('P'), parse_num, char(':').and(space0));
     let p_string_field = map(
-        delimited(char('"'), take_while1(|c| c != '"'), char('"')),
+        context(
+            "string field",
+            preceded(
+                char('\"'),
+                cut(terminated(take_while1(|c| c != '"'), char('\"'))),
+            ),
+        ),
         |s: &str| FieldVal::Str(s.to_owned()),
     );
     let p_num_field = map(parse_num, FieldVal::Num);
@@ -77,16 +86,14 @@ fn parse_field(i: &str) -> IResult<&str, Field> {
         .parse(i)
 }
 
-fn parse_record_internal(i: &str) -> IResult<&str, Record> {
+fn parse_record_internal(i: &str) -> Res<&str, Record> {
     let fields = many1(parse_field);
-    let mut rec = map(tuple((parse_rec_header, fields)), |(id, fields)| Record {
+    let rec = map(tuple((parse_rec_header, fields)), |(id, fields)| Record {
         id,
         fields,
     });
     all_consuming(terminated(rec, tag("%\n")))(i)
 }
-
-// TODO VerboseError, preceded(char('\"'), cut(terminated(parse_str, char('\"')))) - for string parsing in str field
 
 #[cfg(test)]
 mod tests {
@@ -149,7 +156,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_record() {
+    fn test_parse_record() -> Result<(), ParseError> {
         let input = "\
 Record: 12
 P01: 321
@@ -173,7 +180,8 @@ P03:  \"sth\"
         ];
         let expected = Record { id: 12, fields };
 
-        let result = parse_record_internal(input);
-        assert_eq!(result, Ok(("", expected)))
+        let result = parse_record(input)?;
+        assert_eq!(result, expected);
+        Ok(())
     }
 }
