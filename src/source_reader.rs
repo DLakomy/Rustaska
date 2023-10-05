@@ -20,7 +20,6 @@ impl<T: BufRead> SourceReader<T> {
             if line.starts_with("Record") {
                 // record start
                 acc.push_str(&line);
-                // acc.push('\n');
             } else if line == "%\n" {
                 // record end
                 acc.push_str(&line);
