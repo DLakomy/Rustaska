@@ -1,10 +1,22 @@
-use std::process;
+use std::{env::args, process};
 
-use rustaska::program;
+use rustaska::{program, Config};
+
+const USAGE: &str = "\
+You need to pass four filepaths, in this order:
+  <source path.lst>, <numbers path.csv>, <strings path.csv>, <errors path.log>";
 
 fn main() {
-    if let Err(e) = program() {
-        eprintln!("Application error: {e}");
+    let cfg = match Config::build(args()) {
+        Ok(cfg) => cfg,
+        Err(_) => {
+            eprintln!("{USAGE}");
+            process::exit(1)
+        }
+    };
+
+    if let Err(e) = program(cfg) {
+        eprintln!("{e}");
         process::exit(1);
     }
 }

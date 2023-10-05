@@ -8,7 +8,7 @@ use std::io::BufReader;
 use crate::source_reader::SourceReader;
 
 #[derive(Debug, PartialEq, Eq)]
-struct Config {
+pub struct Config {
     source_path: String,
     numbers_path: String,
     strings_path: String,
@@ -36,9 +36,9 @@ impl Config {
     }
 }
 
-// TODO use Config as input param
-pub fn program() -> Result<(), Box<dyn Error>> {
-    let f = File::open("example-files/ex1.lst")?;
+pub fn program(cfg: Config) -> Result<(), Box<dyn Error>> {
+    let f = File::open("example-files/ex1.lst")
+        .map_err(|e| format!("Error while opening source: {e}"))?;
     let br = BufReader::new(f);
 
     let mut src_reader = SourceReader::new(br);
