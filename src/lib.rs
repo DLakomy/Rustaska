@@ -56,19 +56,19 @@ mod tests {
     fn test_config_parser() {
         // happy path
         let args = vec![
-            "0".to_string(),
-            "src".to_string(),
-            "num".to_string(),
-            "str".to_string(),
-            "err".to_string(),
+            "0".to_owned(),
+            "src".to_owned(),
+            "num".to_owned(),
+            "str".to_owned(),
+            "err".to_owned(),
         ]
         .into_iter();
 
         let expected = Config {
-            source_path: "src".to_string(),
-            numbers_path: "num".to_string(),
-            strings_path: "str".to_string(),
-            errors_path: "err".to_string(),
+            source_path: "src".to_owned(),
+            numbers_path: "num".to_owned(),
+            strings_path: "str".to_owned(),
+            errors_path: "err".to_owned(),
         };
         let obtained = Config::build(args);
 
@@ -76,10 +76,10 @@ mod tests {
 
         // unhappy path 1 - too few args
         let args = vec![
-            "0".to_string(),
-            "src".to_string(),
-            "num".to_string(),
-            "err".to_string(),
+            "0".to_owned(),
+            "src".to_owned(),
+            "num".to_owned(),
+            "err".to_owned(),
         ]
         .into_iter();
 
@@ -88,12 +88,12 @@ mod tests {
 
         // unhappy path 2 - too many args
         let args = vec![
-            "0".to_string(),
-            "src".to_string(),
-            "num".to_string(),
-            "str".to_string(),
-            "err".to_string(),
-            "sth".to_string(),
+            "0".to_owned(),
+            "src".to_owned(),
+            "num".to_owned(),
+            "str".to_owned(),
+            "err".to_owned(),
+            "sth".to_owned(),
         ]
         .into_iter();
 
