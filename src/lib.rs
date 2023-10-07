@@ -36,7 +36,7 @@ impl Config {
     }
 }
 
-pub fn program(cfg: Config) -> Result<(), Box<dyn Error>> {
+pub fn run(cfg: Config) -> Result<(), Box<dyn Error>> {
     let f = File::open("example-files/ex1.lst")
         .map_err(|e| format!("Error while opening source: {e}"))?;
     let br = BufReader::new(f);

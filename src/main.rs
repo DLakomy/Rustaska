@@ -1,6 +1,6 @@
 use std::{env::args, process};
 
-use rustaska::{program, Config};
+use rustaska::{run, Config};
 
 const USAGE: &str = "\
 You need to pass four filepaths, in this order:
@@ -15,7 +15,7 @@ fn main() {
         }
     };
 
-    if let Err(e) = program(cfg) {
+    if let Err(e) = run(cfg) {
         eprintln!("{e}");
         process::exit(1);
     }

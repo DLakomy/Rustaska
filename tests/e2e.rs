@@ -1,6 +1,6 @@
 use std::{error::Error, fs};
 
-use rustaska::{program, Config};
+use rustaska::{run, Config};
 use tempfile::tempdir;
 
 #[test]
@@ -25,7 +25,7 @@ fn end_to_end() -> Result<(), Box<dyn Error>> {
 
     let cfg = Config::build(args)?;
 
-    program(cfg)?;
+    run(cfg)?;
 
     // these should exist, even if empty
     // (panic is better here, it gives a stacktrace
