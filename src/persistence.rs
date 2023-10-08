@@ -27,8 +27,6 @@ impl<T: Write> CsvWriter<T> {
         })
     }
     pub fn write_result(&mut self, result: Result<Record, ParseError>) -> io::Result<()> {
-        // fn write_field() -> io::Result<()> {}
-
         match result {
             Ok(rec) => {
                 let rec_id = rec.id;
