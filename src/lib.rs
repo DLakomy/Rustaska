@@ -1,9 +1,12 @@
 mod parser;
+mod persistence;
 mod source_reader;
 
 use std::error::Error;
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::BufReader;
+
+use persistence::CsvWriter;
 
 use crate::source_reader::SourceReader;
 
@@ -37,13 +40,32 @@ impl Config {
 }
 
 pub fn run(cfg: Config) -> Result<(), Box<dyn Error>> {
-    let f = File::open("example-files/ex1.lst")
-        .map_err(|e| format!("Error while opening source: {e}"))?;
-    let br = BufReader::new(f);
+    let src_file = File::open(cfg.source_path.clone())
+        .map_err(|_| format!("Error while opening source: {}", cfg.source_path))?;
 
-    let mut src_reader = SourceReader::new(br);
-    let record = src_reader.read_record()?;
-    print!("{}", record.unwrap());
+    let src_buffer = BufReader::new(src_file);
+    let mut src_reader = SourceReader::new(src_buffer);
+
+    let open_new_file = |path: String| {
+        OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(path.clone())
+            .map_err(|_| format!("Error while creating file: {}", path))
+    };
+
+    let num_sink = open_new_file(cfg.numbers_path)?;
+    let str_sink = open_new_file(cfg.strings_path)?;
+    let err_sink = open_new_file(cfg.errors_path)?;
+
+    let mut sink = CsvWriter::new(num_sink, str_sink, err_sink);
+
+    while let Some(rec) = src_reader.read_record()? {
+        let parsed = parser::parse_record(rec.as_str());
+        sink.write_result(parsed)?;
+    }
+
+    sink.flush()?;
     Ok(())
 }
 
