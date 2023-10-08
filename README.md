@@ -5,6 +5,6 @@ Remake of https://github.com/DLakomy/Alaska. My first project in Rust.
 TODO:
 - [X] reading the source record by record
 - [X] parser (quality of its error messages are not important right now)
-- [ ] persistence
+- [X] persistence
 - [X] e2e test
-- [ ] simple performance test
+- [X] simple performance test DONE. I've used the `release` build, took a `genExampleFile 20000000 bigExample.lst` result from Alaska, and it took (measured with `time`)... 5 minutes 43 seconds :/ It's much longer than the original Alaska, so naive rewrite to Rust didn't make anything faster ¯\\_(ツ)_/¯
