@@ -56,7 +56,7 @@ mod tests {
     fn run_for_result(result: Result<Record, ParseError>) -> Result<Results, io::Error> {
         let mut buffers: Vec<Vec<u8>> = (0..3).map(|_| Vec::new()).collect();
         {
-            let writers: Vec<_> = buffers.iter_mut().map(|buf| BufWriter::new(buf)).collect();
+            let writers: Vec<_> = buffers.iter_mut().map(BufWriter::new).collect();
 
             let mut csv_writer = {
                 let mut iter = writers.into_iter();
