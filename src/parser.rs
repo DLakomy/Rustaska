@@ -37,12 +37,19 @@ pub struct Record {
 
 #[derive(Debug)]
 pub struct ParseError {
+    ctx: String,
     msg: String,
+}
+
+impl ParseError {
+    pub fn new(ctx: String, msg: String) -> Self {
+        ParseError { ctx, msg }
+    }
 }
 
 impl Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "Error when parsing \"{}...\":\n{}", self.ctx, self.msg)
     }
 }
 
@@ -52,6 +59,7 @@ pub fn parse_record(input: &str) -> Result<Record, ParseError> {
     match parse_record_internal(input).finish() {
         Ok((_, rec)) => Ok(rec),
         Err(e) => Err(ParseError {
+            ctx: input.chars().take_while(|&c| c != '\n').collect(),
             msg: convert_error(input, e),
         }),
     }
@@ -183,5 +191,17 @@ P03:  \"sth\"
         let result = parse_record(input)?;
         assert_eq!(result, expected);
         Ok(())
+    }
+
+    #[test]
+    fn test_parse_error_display() {
+        let err = ParseError::new("Record 1".to_owned(), "whatever".to_owned());
+        let obtained = err.to_string();
+        let expected = "\
+Error when parsing \"Record 1...\":
+whatever"
+            .to_owned();
+
+        assert_eq!(obtained, expected)
     }
 }
