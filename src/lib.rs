@@ -1,3 +1,4 @@
+mod model;
 mod parser;
 mod persistence;
 mod source_reader;

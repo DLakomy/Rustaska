@@ -1,5 +1,6 @@
 use std::{error::Error, fmt::Display};
 
+use super::model::*;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while1},
@@ -13,27 +14,6 @@ use nom::{
 
 // switching error type to VerboseError
 type Res<T, U> = IResult<T, U, VerboseError<T>>;
-
-// could be usize, no idea;
-// not important in this case, it's a toy project
-type Id = i32;
-
-#[derive(PartialEq, Eq, Debug)]
-enum FieldVal {
-    Num(i32),
-    Str(String),
-}
-#[derive(PartialEq, Eq, Debug)]
-struct Field {
-    id: Id,
-    value: FieldVal,
-}
-
-#[derive(PartialEq, Eq, Debug)]
-pub struct Record {
-    id: Id,
-    fields: Vec<Field>,
-}
 
 #[derive(Debug)]
 pub struct ParseError {
