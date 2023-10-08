@@ -1,9 +1,5 @@
-Record: 3
-P02: "another sample text"
+Error when parsing "Record: 3...":
+0: at line 3, in Tag:
 g4rb4ge
 ^
-expectation:
-* must match string: "%
-"
-P01: -123
-%
+
