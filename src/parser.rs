@@ -21,12 +21,6 @@ pub struct ParseError {
     msg: String,
 }
 
-impl ParseError {
-    pub fn new(ctx: String, msg: String) -> Self {
-        ParseError { ctx, msg }
-    }
-}
-
 impl Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Error when parsing \"{}...\":\n{}", self.ctx, self.msg)
@@ -86,6 +80,12 @@ fn parse_record_internal(i: &str) -> Res<&str, Record> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    impl ParseError {
+        pub fn new(ctx: String, msg: String) -> Self {
+            ParseError { ctx, msg }
+        }
+    }
 
     #[test]
     fn test_parse_rec_header() {

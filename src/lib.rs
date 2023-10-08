@@ -59,7 +59,7 @@ pub fn run(cfg: Config) -> Result<(), Box<dyn Error>> {
     let str_sink = open_new_file(cfg.strings_path)?;
     let err_sink = open_new_file(cfg.errors_path)?;
 
-    let mut sink = CsvWriter::new(num_sink, str_sink, err_sink);
+    let mut sink = CsvWriter::new(num_sink, str_sink, err_sink)?;
 
     while let Some(rec) = src_reader.read_record()? {
         let parsed = parser::parse_record(rec.as_str());

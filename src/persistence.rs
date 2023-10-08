@@ -1,6 +1,7 @@
+use super::model::*;
 use std::io::{self, Write};
 
-use crate::parser::{ParseError, Record};
+use crate::parser::ParseError;
 
 pub struct CsvWriter<T: Write> {
     numbers_sink: T,
@@ -11,22 +12,38 @@ pub struct CsvWriter<T: Write> {
 const HEADER: &str = "rec,field,val\n";
 
 impl<T: Write> CsvWriter<T> {
-    pub fn new(mut numbers_sink: T, mut strings_sink: T, mut errors_sink: T) -> Self {
-        numbers_sink.write(HEADER.to_owned().as_bytes());
-        strings_sink.write(HEADER.to_owned().as_bytes());
+    pub fn new(
+        mut numbers_sink: T,
+        mut strings_sink: T,
+        errors_sink: T,
+    ) -> Result<Self, io::Error> {
+        numbers_sink.write_all(HEADER.to_owned().as_bytes())?;
+        strings_sink.write_all(HEADER.to_owned().as_bytes())?;
 
-        CsvWriter {
+        Ok(CsvWriter {
             numbers_sink,
             strings_sink,
             errors_sink,
-        }
+        })
     }
-    pub fn write_result(
-        &mut self,
-        result: Result<Record, ParseError>,
-    ) -> Result<(), std::io::Error> {
+    pub fn write_result(&mut self, result: Result<Record, ParseError>) -> io::Result<()> {
+        // fn write_field() -> io::Result<()> {}
+
         match result {
-            Ok(rec) => todo!(), //CsvWriter::<T>::write_rec_csv(rec),
+            Ok(rec) => {
+                let rec_id = rec.id;
+                rec.fields.into_iter().try_for_each(|field| {
+                    let field_id = field.id;
+                    match field.value {
+                        FieldVal::Num(v) => self
+                            .numbers_sink
+                            .write_all(format!("{rec_id};{field_id};{v}\n").as_bytes()),
+                        FieldVal::Str(v) => self
+                            .strings_sink
+                            .write_all(format!("{rec_id};{field_id};\"{v}\"\n").as_bytes()),
+                    }
+                })
+            }
             Err(e) => self.errors_sink.write_all(e.to_string().as_bytes()),
         }
     }
@@ -42,6 +59,8 @@ impl<T: Write> CsvWriter<T> {
 #[cfg(test)]
 mod tests {
     use std::io::BufWriter;
+
+    use crate::model::{Field, FieldVal};
 
     use super::*;
 
@@ -65,7 +84,7 @@ mod tests {
                     iter.next().expect(MISSING_ELEM),
                     iter.next().expect(MISSING_ELEM),
                 )
-            };
+            }?;
 
             csv_writer.write_result(result)?;
 
@@ -78,8 +97,8 @@ mod tests {
                 .map(|b| String::from_utf8(b).expect("Should convert to string"));
 
             Results {
-                str: iter.next().expect(MISSING_ELEM),
                 num: iter.next().expect(MISSING_ELEM),
+                str: iter.next().expect(MISSING_ELEM),
                 err: iter.next().expect(MISSING_ELEM),
             }
         };
@@ -88,7 +107,33 @@ mod tests {
     }
 
     #[test]
-    fn test_writing_rec() {}
+    fn test_writing_rec() {
+        let id = 66;
+        let fields = vec![
+            Field {
+                id: 1,
+                value: FieldVal::Num(321),
+            },
+            Field {
+                id: 2,
+                value: FieldVal::Str("sample text".to_owned()),
+            },
+            Field {
+                id: 3,
+                value: FieldVal::Str("sth".to_owned()),
+            },
+        ];
+        let rec = Record { id, fields };
+
+        let results = run_for_result(Ok(rec)).expect("Should succeed");
+
+        let expected_num = HEADER.to_owned() + "66;1;321\n";
+        let expected_str = HEADER.to_owned() + "66;2;\"sample text\"\n66;3;\"sth\"\n";
+
+        assert_eq!(results.num, expected_num);
+        assert_eq!(results.str, expected_str);
+        assert_eq!(results.err, "");
+    }
 
     #[test]
     fn test_writing_err() {
