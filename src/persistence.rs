@@ -37,10 +37,10 @@ impl<T: Write> CsvWriter<T> {
                     match field.value {
                         FieldVal::Num(v) => self
                             .numbers_sink
-                            .write_all(format!("{rec_id};{field_id};{v}\n").as_bytes()),
+                            .write_all(format!("{rec_id},{field_id},{v}\n").as_bytes()),
                         FieldVal::Str(v) => self
                             .strings_sink
-                            .write_all(format!("{rec_id};{field_id};\"{v}\"\n").as_bytes()),
+                            .write_all(format!("{rec_id},{field_id},\"{v}\"\n").as_bytes()),
                     }
                 })
             }
@@ -127,8 +127,8 @@ mod tests {
 
         let results = run_for_result(Ok(rec)).expect("Should succeed");
 
-        let expected_num = HEADER.to_owned() + "66;1;321\n";
-        let expected_str = HEADER.to_owned() + "66;2;\"sample text\"\n66;3;\"sth\"\n";
+        let expected_num = HEADER.to_owned() + "66,1,321\n";
+        let expected_str = HEADER.to_owned() + "66,2,\"sample text\"\n66,3,\"sth\"\n";
 
         assert_eq!(results.num, expected_num);
         assert_eq!(results.str, expected_str);
