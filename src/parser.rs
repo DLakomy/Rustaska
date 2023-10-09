@@ -8,7 +8,7 @@ use nom::{
     combinator::{all_consuming, cut, map, map_res, opt, recognize},
     error::{context, convert_error, VerboseError},
     multi::many1,
-    sequence::{delimited, preceded, terminated, tuple},
+    sequence::{delimited, pair, preceded, terminated},
     Finish, IResult, Parser,
 };
 
@@ -63,14 +63,15 @@ fn parse_field(i: &str) -> Res<&str, Field> {
     let p_num_field = map(parse_num, FieldVal::Num);
     let p_field_value = alt((p_string_field, p_num_field));
 
-    tuple((p_field_number, p_field_value, line_ending))
-        .map(|(k, v, _)| Field { id: k, value: v })
-        .parse(i)
+    map(
+        terminated(pair(p_field_number, p_field_value), line_ending),
+        |(id, value)| Field { id, value },
+    )(i)
 }
 
 fn parse_record_internal(i: &str) -> Res<&str, Record> {
     let fields = many1(parse_field);
-    let rec = map(tuple((parse_rec_header, fields)), |(id, fields)| Record {
+    let rec = map(pair(parse_rec_header, fields), |(id, fields)| Record {
         id,
         fields,
     });
