@@ -5,7 +5,7 @@ mod source_reader;
 
 use std::error::Error;
 use std::fs::{File, OpenOptions};
-use std::io::BufReader;
+use std::io::{BufReader, BufWriter};
 
 use persistence::CsvWriter;
 
@@ -52,7 +52,8 @@ pub fn run(cfg: Config) -> Result<(), Box<dyn Error>> {
             .write(true)
             .create_new(true)
             .open(path.clone())
-            .map_err(|_| format!("Error while creating file: {}", path))
+            .map_err(|_| format!("Error while creating file: {path}"))
+            .map(BufWriter::new)
     };
 
     let num_sink = open_new_file(cfg.numbers_path)?;
