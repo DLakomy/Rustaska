@@ -33,16 +33,16 @@ impl<T: Write> CsvWriter<T> {
                 rec.fields.into_iter().try_for_each(|field| {
                     let field_id = field.id;
                     match field.value {
-                        FieldVal::Num(v) => self
-                            .numbers_sink
-                            .write_all(format!("{rec_id},{field_id},{v}\n").as_bytes()),
-                        FieldVal::Str(v) => self
-                            .strings_sink
-                            .write_all(format!("{rec_id},{field_id},\"{v}\"\n").as_bytes()),
+                        FieldVal::Num(v) => {
+                            writeln!(&mut self.numbers_sink, "{rec_id},{field_id},{v}")
+                        }
+                        FieldVal::Str(v) => {
+                            writeln!(&mut self.strings_sink, "{rec_id},{field_id},\"{v}\"")
+                        }
                     }
                 })
             }
-            Err(e) => self.errors_sink.write_all(e.to_string().as_bytes()),
+            Err(e) => write!(&mut self.errors_sink, "{e}"),
         }
     }
 
