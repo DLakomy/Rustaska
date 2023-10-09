@@ -7,4 +7,4 @@ TODO:
 - [X] parser (quality of its error messages are not important right now)
 - [X] persistence
 - [X] e2e test
-- [X] simple performance test DONE. I've used the `release` build, took a `genExampleFile 20000000 bigExample.lst` result from Alaska, and it took (measured with `time`)... 5 minutes 43 seconds :/ It's much longer than the original Alaska, so naive rewrite to Rust didn't make anything faster ¯\\_(ツ)_/¯
+- [X] simple performance test DONE. I've used the `release` build, took a `genExampleFile 20000000 bigExample.lst` result from Alaska, and it took (measured with `time`)... 85 seconds :/ Could be faster, but dunno how ¯\\_(ツ)_/¯
