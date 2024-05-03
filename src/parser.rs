@@ -1,6 +1,7 @@
-use std::{error::Error, fmt::Display};
+mod lexer;
 
 use super::model::*;
+use std::{error::Error, fmt::Display};
 
 #[derive(Debug)]
 pub struct ParseError {
@@ -16,7 +17,7 @@ impl Display for ParseError {
 
 impl Error for ParseError {}
 
-pub fn parse_record(input: &str) -> Result<Record, ParseError> {
+pub fn parse_record(_input: &str) -> Result<Record, ParseError> {
     todo!()
 }
 
