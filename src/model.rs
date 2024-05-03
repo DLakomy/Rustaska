@@ -3,18 +3,18 @@
 pub type Id = i32;
 
 #[derive(PartialEq, Eq, Debug)]
-pub enum FieldVal {
+pub enum FieldVal<'a> {
     Num(i32),
-    Str(String),
+    Str(&'a str),
 }
 #[derive(PartialEq, Eq, Debug)]
-pub struct Field {
+pub struct Field<'a> {
     pub id: Id,
-    pub value: FieldVal,
+    pub value: FieldVal<'a>,
 }
 
 #[derive(PartialEq, Eq, Debug)]
-pub struct Record {
+pub struct Record<'a> {
     pub id: Id,
-    pub fields: Vec<Field>,
+    pub fields: Vec<Field<'a>>,
 }

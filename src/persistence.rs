@@ -114,11 +114,11 @@ mod tests {
             },
             Field {
                 id: 2,
-                value: FieldVal::Str("sample text".to_owned()),
+                value: FieldVal::Str("sample text"),
             },
             Field {
                 id: 3,
-                value: FieldVal::Str("sth".to_owned()),
+                value: FieldVal::Str("sth"),
             },
         ];
         let rec = Record { id, fields };

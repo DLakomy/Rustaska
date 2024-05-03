@@ -49,7 +49,9 @@ pub fn parse_record(input: &str) -> Result<Record, ParseError> {
     }
 }
 
-fn parse_fields<'src>(lexer: &mut Lexer<'src, Token<'src>>) -> Result<Vec<Field>, ParseError> {
+fn parse_fields<'src>(
+    lexer: &mut Lexer<'src, Token<'src>>,
+) -> Result<Vec<Field<'src>>, ParseError> {
     let mut fields = Vec::new();
 
     while let Some(Ok(token)) = lexer.next() {
@@ -78,14 +80,17 @@ fn parse_fields<'src>(lexer: &mut Lexer<'src, Token<'src>>) -> Result<Vec<Field>
     Ok(fields)
 }
 
-fn parse_field<'src>(id: i32, lexer: &mut Lexer<'src, Token<'src>>) -> Result<Field, ParseError> {
+fn parse_field<'src>(
+    id: i32,
+    lexer: &mut Lexer<'src, Token<'src>>,
+) -> Result<Field<'src>, ParseError> {
     let ctx = "field";
 
     let value: FieldVal = {
         if let Some(Ok(token)) = lexer.next() {
             match token {
                 Token::Number(value) => Ok(FieldVal::Num(value)),
-                Token::String(value) => Ok(FieldVal::Str(value.to_owned())), // FIXME avoid allocation
+                Token::String(value) => Ok(FieldVal::Str(value)),
                 _ => Err(ParseError {
                     ctx: ctx.to_owned(),
                     msg: "Expected field value (number or quoted string)".to_owned(),
@@ -135,7 +140,7 @@ P04:  \"sth\"
             },
             Field {
                 id: 2,
-                value: FieldVal::Str("sample text".to_owned()),
+                value: FieldVal::Str("sample text"),
             },
             Field {
                 id: 3,
@@ -143,7 +148,7 @@ P04:  \"sth\"
             },
             Field {
                 id: 4,
-                value: FieldVal::Str("sth".to_owned()),
+                value: FieldVal::Str("sth"),
             },
         ];
         let expected = Record { id: 12, fields };
