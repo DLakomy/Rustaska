@@ -1,5 +1,2 @@
-Error when parsing "Record: 3...":
-0: at line 3, in Tag:
-g4rb4ge
-^
-
+Error when parsing "fields...":
+Unexpected content after RecordEnd
