@@ -1,5 +1,9 @@
 mod lexer;
 
+use logos::{Lexer, Logos};
+
+use self::lexer::Token;
+
 use super::model::*;
 use std::{error::Error, fmt::Display};
 
@@ -17,8 +21,91 @@ impl Display for ParseError {
 
 impl Error for ParseError {}
 
-pub fn parse_record(_input: &str) -> Result<Record, ParseError> {
-    todo!()
+// disclaimer: I'm focused on the happy path only, not on good error handling
+pub fn parse_record(input: &str) -> Result<Record, ParseError> {
+    let ctx = "header".to_owned();
+    let mut lexer = Token::lexer(input);
+    match lexer.next() {
+        Some(Ok(Token::RecordStart)) => match lexer.next() {
+            Some(Ok(Token::Number(id))) => {
+                if lexer.next() != Some(Ok(Token::NewLine)) {
+                    return Err(ParseError {
+                        ctx,
+                        msg: "Expected a new line".to_owned(),
+                    });
+                }
+                let fields = parse_fields(&mut lexer)?;
+                Ok(Record { id, fields })
+            }
+            _ => Err(ParseError {
+                ctx,
+                msg: "Expected a record id (a number)".to_owned(),
+            }),
+        },
+        _ => Err(ParseError {
+            ctx,
+            msg: "Expected string: \"Record:\"".to_owned(),
+        }),
+    }
+}
+
+fn parse_fields<'src>(lexer: &mut Lexer<'src, Token<'src>>) -> Result<Vec<Field>, ParseError> {
+    let mut fields = Vec::new();
+
+    while let Some(Ok(token)) = lexer.next() {
+        match token {
+            Token::FieldId(id) => {
+                let field = parse_field(id, lexer)?;
+                fields.push(field)
+            }
+            Token::RecordEnd => break,
+            _ => {
+                return Err(ParseError {
+                    ctx: "fields".to_owned(),
+                    msg: "Expected field id (eg. \"P12:\")".to_owned(),
+                })
+            }
+        }
+    }
+
+    if lexer.remainder() != "\n" {
+        return Err(ParseError {
+            ctx: "fields".to_owned(),
+            msg: "Unexpected content after RecordEnd".to_owned(),
+        });
+    };
+
+    Ok(fields)
+}
+
+fn parse_field<'src>(id: i32, lexer: &mut Lexer<'src, Token<'src>>) -> Result<Field, ParseError> {
+    let ctx = "field";
+
+    let value: FieldVal = {
+        if let Some(Ok(token)) = lexer.next() {
+            match token {
+                Token::Number(value) => Ok(FieldVal::Num(value)),
+                Token::String(value) => Ok(FieldVal::Str(value.to_owned())), // FIXME avoid allocation
+                _ => Err(ParseError {
+                    ctx: ctx.to_owned(),
+                    msg: "Expected field value (number or quoted string)".to_owned(),
+                }),
+            }
+        } else {
+            Err(ParseError {
+                ctx: ctx.to_owned(),
+                msg: "Found unexpected... something".to_owned(),
+            })
+        }
+    }?;
+
+    match lexer.next() {
+        Some(Ok(Token::NewLine)) => Ok(Field { id, value }),
+        _ => Err(ParseError {
+            ctx: ctx.to_owned(),
+            msg: "Expected new line".to_owned(),
+        }),
+    }
 }
 
 #[cfg(test)]
@@ -76,5 +163,17 @@ whatever"
             .to_owned();
 
         assert_eq!(obtained, expected)
+    }
+
+    #[test]
+    fn test_reject_trailing() {
+        let input = "\
+Record: 12
+P01: 321
+%\nP02";
+
+        let obtained = parse_record(input);
+
+        assert!(obtained.is_err())
     }
 }
