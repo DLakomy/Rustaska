@@ -7,4 +7,6 @@ TODO:
 - [X] parser (quality of its error messages are not important right now)
 - [X] persistence
 - [X] e2e test
-- [X] simple performance test DONE. I've used the `release` build, took a `genExampleFile 20000000 bigExample.lst` result from Alaska, and it took (measured with `time`)... 28 seconds 😮
+- [X] simple performance test DONE. I've used the `release` build, took a `genExampleFile 20000000 bigExample.lst` result from Alaska, and it took (measured with `time`)... 28 seconds (16 with turboboost enabled) 😮
+
+Update: with logos (and turboboost) it's 11!
